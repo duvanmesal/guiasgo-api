@@ -160,6 +160,10 @@ export class ServicesService {
     return mapServiceRequestResponse(serviceRequest);
   }
 
+  findAuthorizedService(id: string, user: AuthenticatedUser) {
+    return this.findServiceForUser(id, user);
+  }
+
   accept(id: string, user: AuthenticatedUser): Promise<ServiceRequestResponse> {
     return this.transitionGuideService(id, user, ServiceStatus.ACCEPTED, {
       acceptedAt: new Date(),

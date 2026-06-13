@@ -52,6 +52,17 @@ enum ServicePricingMode {
   ROUTE
 }
 
+enum ComplaintStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+}
+
+enum LocationSource {
+  MOCK
+  GPS
+}
+
 model HealthCheck {
   id        String   @id @default(uuid())
   name      String
@@ -75,6 +86,11 @@ model User {
   guideProfile   GuideProfile?
   reviewedCertifications GuideCertification[] @relation("CertificationReviewer")
   touristServiceRequests ServiceRequest[] @relation("TouristServiceRequests")
+  reviewsWritten Review[] @relation("ReviewerReviews")
+  reviewsReceived Review[] @relation("ReviewedUserReviews")
+  complaintsCreated Complaint[] @relation("ComplaintCreator")
+  complaintsAssigned Complaint[] @relation("ComplaintAssignee")
+  locationUpdates LocationUpdate[]
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   deletedAt      DateTime?
@@ -299,6 +315,8 @@ model ServiceRequest {
   guide                  GuideProfile       @relation(fields: [guideId], references: [id], onDelete: Restrict)
   cityCatalog            City?              @relation(fields: [cityId], references: [id], onDelete: SetNull)
   tourSession            TourSession?
+  reviews                Review[]
+  complaints             Complaint[]
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
@@ -322,4 +340,59 @@ model TourSession {
   updatedAt        DateTime       @updatedAt
 
   @@map("tour_sessions")
+}
+
+model Review {
+  id               String         @id @default(uuid())
+  serviceRequestId String
+  reviewerId       String
+  reviewedUserId   String
+  rating           Int
+  comment          String?
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  reviewer         User           @relation("ReviewerReviews", fields: [reviewerId], references: [id], onDelete: Restrict)
+  reviewedUser     User           @relation("ReviewedUserReviews", fields: [reviewedUserId], references: [id], onDelete: Restrict)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([serviceRequestId, reviewerId])
+  @@index([reviewedUserId])
+  @@map("reviews")
+}
+
+model Complaint {
+  id               String          @id @default(uuid())
+  serviceRequestId String
+  createdById      String
+  reason           String
+  description      String
+  status           ComplaintStatus @default(OPEN)
+  assignedToId     String?
+  resolvedAt       DateTime?
+  resolutionNotes  String?
+  serviceRequest   ServiceRequest  @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  createdBy        User            @relation("ComplaintCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  assignedTo       User?           @relation("ComplaintAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([serviceRequestId])
+  @@index([status])
+  @@index([createdById])
+  @@map("complaints")
+}
+
+model LocationUpdate {
+  id        String         @id @default(uuid())
+  userId    String
+  latitude  Float
+  longitude Float
+  accuracy  Float?
+  source    LocationSource @default(MOCK)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId, updatedAt])
+  @@map("location_updates")
 }

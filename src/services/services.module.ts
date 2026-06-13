@@ -6,5 +6,6 @@ import { ServiceStateMachine } from './service-state-machine';
 @Module({
   controllers: [ServicesController],
   providers: [ServicesService, ServiceStateMachine],
+  exports: [ServicesService],
 })
 export class ServicesModule {}
