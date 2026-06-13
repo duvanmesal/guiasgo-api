@@ -4,6 +4,16 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
+jest.mock('./../src/prisma/prisma.service', () => ({
+  PrismaService: class {
+    async onModuleInit() {}
+    async onModuleDestroy() {}
+    async $queryRaw() {
+      return [{ '?column?': 1 }];
+    }
+  },
+}));
+
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 
@@ -13,14 +23,26 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/api (GET)', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api')
       .expect(200)
       .expect('Hello World!');
+  });
+
+  it('/api/health (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/api/health')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.status).toBe('ok');
+        expect(body.database).toBe('ok');
+        expect(body.timestamp).toBeDefined();
+      });
   });
 
   afterEach(async () => {
