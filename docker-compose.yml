@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: guiasgo-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: guiasgo_colombia
+    ports:
+      - "5433:5432"
+    volumes:
+      - guiasgo_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  guiasgo_postgres_data:
