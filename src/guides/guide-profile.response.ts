@@ -1,8 +1,10 @@
-import { GuideProfile, GuideVerificationStatus, Prisma } from '@prisma/client';
+import { GuideProfile, GuideVerificationStatus, Prisma, User } from '@prisma/client';
 
 export interface GuideProfileResponse {
   id: string;
   userId: string;
+  fullName: string | null;
+  photoUrl: string | null;
   bio: string;
   city: string;
   languages: string[];
@@ -22,6 +24,10 @@ export interface GuideProfileResponse {
   updatedAt: string;
 }
 
+type GuideProfileWithUser = GuideProfile & {
+  user?: Pick<User, 'fullName' | 'photoUrl'>;
+};
+
 export function toApiGuideVerificationStatus(
   status: GuideVerificationStatus,
 ): string {
@@ -29,11 +35,13 @@ export function toApiGuideVerificationStatus(
 }
 
 export function mapGuideProfileResponse(
-  profile: GuideProfile,
+  profile: GuideProfileWithUser,
 ): GuideProfileResponse {
   return {
     id: profile.id,
     userId: profile.userId,
+    fullName: profile.user?.fullName ?? null,
+    photoUrl: profile.user?.photoUrl ?? null,
     bio: profile.bio,
     city: profile.city,
     languages: profile.languages,

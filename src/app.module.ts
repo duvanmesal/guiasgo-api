@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CatalogsModule } from './catalogs/catalogs.module';
 import { CertificationsModule } from './certifications/certifications.module';
 import { validateEnv } from './config/env.validation';
 import { GuidesModule } from './guides/guides.module';
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module';
     TouristsModule,
     GuidesModule,
     CertificationsModule,
+    CatalogsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -110,10 +110,68 @@ model TouristProfile {
   @@map("tourist_profiles")
 }
 
+model Country {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  cities    City[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("countries")
+}
+
+model City {
+  id        String         @id @default(uuid())
+  countryId String
+  name      String
+  slug      String
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean        @default(true)
+  country   Country        @relation(fields: [countryId], references: [id], onDelete: Restrict)
+  guides    GuideProfile[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([countryId, slug])
+  @@index([isActive])
+  @@map("cities")
+}
+
+model Language {
+  id        String          @id @default(uuid())
+  name      String
+  code      String          @unique
+  isActive  Boolean         @default(true)
+  guides    GuideLanguage[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([isActive])
+  @@map("languages")
+}
+
+model Specialty {
+  id          String           @id @default(uuid())
+  name        String
+  slug        String           @unique
+  description String?
+  isActive    Boolean          @default(true)
+  guides      GuideSpecialty[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([isActive])
+  @@map("specialties")
+}
+
 model GuideProfile {
   id                 String                    @id @default(uuid())
   userId             String                    @unique
   bio                String
+  cityId             String?
   city               String
   languages          String[]                  @default([])
   specialties        String[]                  @default([])
@@ -128,15 +186,46 @@ model GuideProfile {
   latitude           Float?
   longitude          Float?
   user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cityCatalog        City?                     @relation(fields: [cityId], references: [id], onDelete: SetNull)
   certifications     GuideCertification[]
+  guideLanguages     GuideLanguage[]
+  guideSpecialties   GuideSpecialty[]
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
   deletedAt          DateTime?
 
+  @@index([cityId])
   @@index([city])
   @@index([verificationStatus])
   @@index([isAvailable])
   @@map("guide_profiles")
+}
+
+model GuideLanguage {
+  id         String       @id @default(uuid())
+  guideId    String
+  languageId String
+  level      String?
+  guide      GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  language   Language     @relation(fields: [languageId], references: [id], onDelete: Restrict)
+  createdAt  DateTime     @default(now())
+
+  @@unique([guideId, languageId])
+  @@index([languageId])
+  @@map("guide_languages")
+}
+
+model GuideSpecialty {
+  id          String       @id @default(uuid())
+  guideId     String
+  specialtyId String
+  guide       GuideProfile @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  specialty   Specialty    @relation(fields: [specialtyId], references: [id], onDelete: Restrict)
+  createdAt   DateTime     @default(now())
+
+  @@unique([guideId, specialtyId])
+  @@index([specialtyId])
+  @@map("guide_specialties")
 }
 
 model GuideCertification {
