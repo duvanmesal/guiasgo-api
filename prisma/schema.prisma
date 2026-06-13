@@ -33,6 +33,25 @@ enum CertificationStatus {
   REJECTED
 }
 
+enum ServiceStatus {
+  REQUESTED
+  ACCEPTED
+  GUIDE_ON_WAY
+  MEETING_POINT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED_BY_TOURIST
+  CANCELLED_BY_GUIDE
+  REJECTED_BY_GUIDE
+  EXPIRED
+  REPORTED
+}
+
+enum ServicePricingMode {
+  HOURLY
+  ROUTE
+}
+
 model HealthCheck {
   id        String   @id @default(uuid())
   name      String
@@ -55,6 +74,7 @@ model User {
   touristProfile TouristProfile?
   guideProfile   GuideProfile?
   reviewedCertifications GuideCertification[] @relation("CertificationReviewer")
+  touristServiceRequests ServiceRequest[] @relation("TouristServiceRequests")
   createdAt      DateTime             @default(now())
   updatedAt      DateTime             @updatedAt
   deletedAt      DateTime?
@@ -132,6 +152,7 @@ model City {
   isActive  Boolean        @default(true)
   country   Country        @relation(fields: [countryId], references: [id], onDelete: Restrict)
   guides    GuideProfile[]
+  serviceRequests ServiceRequest[]
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
@@ -190,6 +211,7 @@ model GuideProfile {
   certifications     GuideCertification[]
   guideLanguages     GuideLanguage[]
   guideSpecialties   GuideSpecialty[]
+  serviceRequests    ServiceRequest[]
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
   deletedAt          DateTime?
@@ -248,4 +270,56 @@ model GuideCertification {
   @@index([guideId])
   @@index([status])
   @@map("guide_certifications")
+}
+
+model ServiceRequest {
+  id                     String             @id @default(uuid())
+  touristId              String
+  guideId                String
+  cityId                 String?
+  city                   String
+  meetingPoint           String
+  scheduledAt            DateTime?
+  requestedAt            DateTime           @default(now())
+  status                 ServiceStatus      @default(REQUESTED)
+  pricingMode            ServicePricingMode @default(HOURLY)
+  estimatedDurationHours Decimal?           @db.Decimal(5, 2)
+  routeTitle             String?
+  estimatedPrice         Decimal            @db.Decimal(12, 2)
+  notes                  String?
+  expiresAt              DateTime
+  acceptedAt             DateTime?
+  rejectedAt             DateTime?
+  cancelledAt            DateTime?
+  completedAt            DateTime?
+  cancellationReason     String?
+  cancellationNotes      String?
+  rejectionReason        String?
+  tourist                User               @relation("TouristServiceRequests", fields: [touristId], references: [id], onDelete: Restrict)
+  guide                  GuideProfile       @relation(fields: [guideId], references: [id], onDelete: Restrict)
+  cityCatalog            City?              @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  tourSession            TourSession?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  @@index([touristId, status])
+  @@index([guideId, status])
+  @@index([cityId])
+  @@index([scheduledAt])
+  @@index([expiresAt])
+  @@map("service_requests")
+}
+
+model TourSession {
+  id               String         @id @default(uuid())
+  serviceRequestId String         @unique
+  startedAt        DateTime?
+  endedAt          DateTime?
+  status           ServiceStatus
+  routeSummary     String?
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("tour_sessions")
 }

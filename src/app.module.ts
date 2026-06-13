@@ -9,6 +9,7 @@ import { validateEnv } from './config/env.validation';
 import { GuidesModule } from './guides/guides.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ServicesModule } from './services/services.module';
 import { TouristsModule } from './tourists/tourists.module';
 import { UsersModule } from './users/users.module';
 
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     GuidesModule,
     CertificationsModule,
     CatalogsModule,
+    ServicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
