@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserStatus } from '@prisma/client';
+import { UserRole, UserStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateMeDto } from './dto/update-me.dto';
 import {
@@ -66,5 +66,21 @@ export class UsersService {
     });
 
     return mapUserResponse(user);
+  }
+
+  async ensureRole(userId: string, role: UserRole): Promise<void> {
+    await this.prisma.userRoleAssignment.upsert({
+      where: {
+        userId_role: {
+          userId,
+          role,
+        },
+      },
+      create: {
+        userId,
+        role,
+      },
+      update: {},
+    });
   }
 }
